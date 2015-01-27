@@ -6,7 +6,7 @@ import java.lang.Thread;
 import java.lang.Runnable;
 import java.io.IOException;
 
-class UDPHandler {
+public class UDPHandler {
     private String serverURL = "";
     private String userType = "c";
     private DatagramSocket clientSocket;
