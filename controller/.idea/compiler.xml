@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <option name="DEFAULT_COMPILER" value="Javac" />
+    <excludeFromCompile>
+      <file url="file://$PROJECT_DIR$/../DroneApp/app/src/main/java/shidel/droneapp/Controller.java" />
+      <file url="file://$PROJECT_DIR$/../DroneApp/app/src/main/java/shidel/droneapp/MainActivity.java" />
+      <file url="file://$PROJECT_DIR$/../DroneApp/app/src/main/java/shidel/droneapp/MainLoop.java" />
+      <file url="file://$PROJECT_DIR$/../DroneApp/app/src/main/java/shidel/droneapp/Motors.java" />
+      <file url="file://$PROJECT_DIR$/../DroneApp/app/src/main/java/shidel/droneapp/Position.java" />
+      <file url="file://$PROJECT_DIR$/../DroneApp/app/src/main/java/shidel/droneapp/Test.java" />
+      <directory url="file://$PROJECT_DIR$/../DroneApp/app/src/androidTest" includeSubdirectories="true" />
+    </excludeFromCompile>
+    <resourceExtensions />
+    <wildcardResourcePatterns>
+      <entry name="!?*.java" />
+      <entry name="!?*.form" />
+      <entry name="!?*.class" />
+      <entry name="!?*.groovy" />
+      <entry name="!?*.scala" />
+      <entry name="!?*.flex" />
+      <entry name="!?*.kt" />
+      <entry name="!?*.clj" />
+    </wildcardResourcePatterns>
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="false">
+        <processorPath useClasspath="true" />
+      </profile>
+    </annotationProcessing>
+  </component>
+</project>
