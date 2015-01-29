@@ -18,7 +18,7 @@ public class Main extends JPanel {
 
     public Main() {
         try {
-            controller = new UDPHandler(serverURL, "c");
+            controller = new UDPHandler(serverURL, "c", null, null);
         } catch(IOException e) {
             e.printStackTrace();
             return;

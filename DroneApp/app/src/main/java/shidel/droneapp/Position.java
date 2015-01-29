@@ -6,10 +6,10 @@ import android.hardware.SensorEventListener;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
-import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -49,6 +49,8 @@ public class Position implements SensorEventListener{
     private double accOffset = 0;
     private float startTime = System.nanoTime();
     private float nonAccelerationTimeStart = 0;
+
+    private ArrayList<SensorCallback> callbacks = new ArrayList<SensorCallback>();
 
 
     public Position(Activity act){
@@ -90,6 +92,56 @@ public class Position implements SensorEventListener{
 
     public void zeroZ(){
         z = 0;
+    }
+
+
+    public void setDeltaCallback(double delta, boolean removeOnFinish, SensorCallback callback){
+        callback.delta = delta;
+        callback.removeOnFinish = removeOnFinish;
+        setDeltaCallback(callback);
+    }
+    public void setDeltaCallback(SensorCallback callback){
+        switch(callback.dim) {
+            case x:
+                callback.initial = x;
+                break;
+            case y:
+                callback.initial = y;
+                break;
+            case z:
+                callback.initial = z;
+                break;
+        }
+        callbacks.add(callback);
+    }
+    public abstract class SensorCallback {
+        public double delta = 0;
+        public double initial = 0;
+        public Dimension dim;
+        public boolean removeOnFinish = true;
+        public abstract void done();
+    }
+    private void checkSensorCallbacks(){
+        for (SensorCallback callback: callbacks){
+            Double pos = null;
+            switch(callback.dim) {
+                case x:
+                    pos = x;
+                    break;
+                case y:
+                    pos = y;
+                    break;
+                case z:
+                    pos = z;
+                    break;
+            }
+            if (pos-callback.initial >= callback.delta) {
+                callback.done();
+                if (callback.removeOnFinish){
+                    callbacks.remove(callback);
+                }
+            }
+        }
     }
 
     @Override
@@ -168,7 +220,7 @@ public class Position implements SensorEventListener{
             accAverage = (accAverage*accCount+event.values[2])/(accCount+1);
             accCount++;
         }*/
-
+        checkSensorCallbacks();
 
     }
 

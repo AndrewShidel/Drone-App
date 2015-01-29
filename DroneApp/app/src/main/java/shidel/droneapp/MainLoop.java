@@ -1,8 +1,13 @@
 package shidel.droneapp;
 
 import android.app.Activity;
+import android.widget.TextView;
 
 import java.io.IOException;
+
+import shidel.droneapp.UDPHandler.UDPCallback;
+import shidel.droneapp.adapters.DroneThreadAdapter;
+import shidel.droneapp.adapters.ThreadAdapter;
 
 /**
  * Created by andrew on 1/1/15.
@@ -13,31 +18,27 @@ public class MainLoop {
     private Activity act;
     private double z = 0;
 
-    public MainLoop(Activity act){
+    public MainLoop(Activity act) {
         this.act = act;
         desX = desY = desZ = 0;
     }
 
-    public void start(Controller user){
-        Position pos = new Position(act);
+    public void start(Controller user) throws IOException {
+        Position pos;// = new Position(act);
         Motors moters = new Motors();
         UDPHandler connection;
-        try {
-            connection = new UDPHandler("54.68.154.101", "d");
-        }catch(IOException e){
-            System.out.println("Could not connect");
-            return;
-        }
-        while (true){
-            String command = connection.latestMessage;
-            if (command==null || command==""){
-                try {
-                    Thread.sleep(100);
-                }catch (InterruptedException e){}
-                continue;
-            }
 
-            switch (command) {
+        final TextView dbX = (TextView) act.findViewById(R.id.debugX);
+
+        ThreadAdapter adapter = new DroneThreadAdapter(act);
+        new UDPHandler("54.68.154.101", "d", adapter, new UDPCallback() {
+            @Override
+            public void onCommand(String cmd) {
+                dbX.setText(cmd);
+            }
+        });
+
+            /*switch (command) {
                 case "up":
                     up();
                     break;
@@ -74,25 +75,30 @@ public class MainLoop {
             moters.setSpeed(1, (int)(moters.getSpeed(1) + delta));
             moters.setSpeed(2, (int)(moters.getSpeed(2) + delta));
             moters.setSpeed(3, (int)(moters.getSpeed(3) + delta));
-            moters.setSpeed(4, (int)(moters.getSpeed(4) + delta));
-        }
+            moters.setSpeed(4, (int)(moters.getSpeed(4) + delta));*/
     }
-    private void up(){
+
+    private void up() {
         desZ = z + granularity;
     }
-    private void down(){
+
+    private void down() {
         desZ = z - granularity;
     }
-    private void left(){
-        desX-=granularity;
+
+    private void left() {
+        desX -= granularity;
     }
-    private void right(){
-        desX+=granularity;
+
+    private void right() {
+        desX += granularity;
     }
-    private void forward(){
-        desY+=granularity;
+
+    private void forward() {
+        desY += granularity;
     }
-    private void backward(){
-        desY-=granularity;
+
+    private void backward() {
+        desY -= granularity;
     }
 }
