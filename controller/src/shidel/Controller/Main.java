@@ -7,13 +7,16 @@ import java.io.IOException;
 
 import shidel.droneapp.UDPHandler;
 
+import com.leapmotion.leap.*;
+
 import javax.swing.*;
-import javax.swing.plaf.basic.BasicInternalFrameTitlePane;
 
 public class Main extends JPanel {
     private static final int PREF_W = 400;
     private static final int PREF_H = PREF_W;
     private static final String serverURL = "54.68.154.101";
+    private static LeapListener listener;
+
     private UDPHandler controller;
 
     public Main() {
@@ -59,9 +62,25 @@ public class Main extends JPanel {
                     case KeyEvent.VK_DOWN:
                         sendCmd("down");
                         break;
+                    case KeyEvent.VK_SPACE:
+                        listener.setBasePos();
+                        break;
                 }
             }
         });
+        Runnable mainLoop =  () -> { startLoop(); };
+        new Thread(mainLoop).start();
+    }
+
+    public void startLoop() {
+        while (true) {
+            sendCmd("leap||" + listener.getDeltaPos());
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void sendCmd(String cmd){
@@ -90,6 +109,9 @@ public class Main extends JPanel {
     }
 
     public static void main(String[] args) {
+        Controller controller = new Controller();
+        listener = new LeapListener();
+        controller.addListener(listener);
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 createAndShowGui();
