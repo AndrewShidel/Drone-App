@@ -18,6 +18,9 @@ public class Motors {
         new ArmEscTask(callback).execute();
     }
 
+    public void setSpeed(int motorID, int speed) {
+        setSpeed(motorID, speed, null);
+    }
     public void setSpeed(int motorID, int speed, MotorTaskCallback callback){
         motorID--;
         int startSpeed = 0;
@@ -115,7 +118,9 @@ public class Motors {
         }
         @Override
         protected void onPostExecute(Void res) {
-            callback.finished();
+            if (callback!=null) {
+                callback.finished();
+            }
         }
     }
 

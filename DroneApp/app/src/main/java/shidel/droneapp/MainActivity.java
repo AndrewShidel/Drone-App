@@ -47,12 +47,12 @@ public class MainActivity extends Activity {
                 UsbManager usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
                 maestroSSC.setDevice(usbManager, device);
 
-                Motors motors = new Motors(maestroSSC);
+                final Motors motors = new Motors(maestroSSC);
                 motors.armEscs(new Motors.MotorTaskCallback() {
                     @Override
                     public void finished() {
                         try {
-                            new MainLoop(MainActivity.this).start(new Controller());
+                            new MainLoop(MainActivity.this).start(motors);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
