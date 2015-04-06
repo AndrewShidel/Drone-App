@@ -77,9 +77,9 @@ public class UDPHandler {
                     }
                     final String data = new String(trim(receivePacket.getData()));
 
-                    if (threadAdapter != null && callback != null)
+                    if (threadAdapter != null && callback != null) {
                         threadAdapter.run(callback, data);
-
+                    }
                 }
             }
         });

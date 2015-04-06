@@ -23,8 +23,8 @@ public class MainLoop {
         desX = desY = desZ = 0;
     }
 
-    public void start(Motors motors) throws IOException {
-        Position pos = new Position(act);
+    public void start(final Motors motors) throws IOException {
+        final Position pos = new Position(act);
 
         final TextView dbX = (TextView) act.findViewById(R.id.debugX);
 
@@ -33,7 +33,30 @@ public class MainLoop {
             @Override
             public void onCommand(String cmd) {
                 dbX.setText(cmd);
+                String[] parts = cmd.split("||");
+                if (parts.length == 2 && parts[0].equals("leap")) {
+                    XYZ<Integer> xyz = parseXYZ(parts[1]);
+                    int m1, m2, m3, m4;
+                    m1 = m2 = m3 = m4 = mmToTagetV(xyz.y);
 
+                    int xDisp = mmToTagetV(xyz.x);
+                    m1 += xDisp;
+                    m4 += xDisp;
+                    m2 -= xDisp;
+                    m3 -= xDisp;
+
+                    int zDisp = mmToTagetV(xyz.z);
+                    m1 += zDisp;
+                    m2 += zDisp;
+                    m3 -= zDisp;
+                    m4 -= zDisp;
+
+                    motors.setSpeed(1, m1);
+                    motors.setSpeed(2, m2);
+                    motors.setSpeed(3, m3);
+                    motors.setSpeed(4, m4);
+                    return;
+                }
                 switch (cmd) {
                     case "up":
                         up();
@@ -107,5 +130,25 @@ public class MainLoop {
 
     private void backward() {
         desY -= granularity;
+    }
+
+    private XYZ<Integer> parseXYZ(String xyzStr) {
+        XYZ<Integer> xyz = new XYZ(Integer.class);
+        String[] parts = xyzStr.split(",");
+        xyz.x = (int) Double.parseDouble(parts[0]);
+        xyz.y = (int) Double.parseDouble(parts[1]);
+        xyz.z = (int) Double.parseDouble(parts[2]);
+        return xyz;
+    }
+
+    private class XYZ<T> {
+        public T x,y,z;
+        public XYZ(Class<T> clazz) {
+            x = y = z = clazz.cast(0);
+        }
+    }
+
+    private int mmToTagetV(int mm) {
+        return (mm/600)*3000;
     }
 }
