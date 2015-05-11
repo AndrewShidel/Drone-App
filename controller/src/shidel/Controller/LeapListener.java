@@ -7,23 +7,50 @@ public class LeapListener extends Listener {
     private XYZ basePos = null;
     private XYZ deltaPos =  null;
 
+    /**
+     * Initialize a new LeapListener
+     */
     public LeapListener(){
+        basePos = new XYZ();
         basePos.x = basePos.y = basePos.z = Float.MAX_VALUE;
     }
 
+    /**
+     * Zeros out the leap controller data
+     */
     public void setBasePos() {
         basePos = pos.copy();
         deltaPos = new XYZ();
     }
 
+    /**
+     * Gets the hand position.
+     * @return hand position in the form "x,y,z"
+     */
+    public String getPos() {
+        return pos.toString();
+    }
+
+    /**
+     * Get the distance from the origin.
+     * @return distance in the form "x,y,z"
+     */
     public String getDeltaPos() {
-        return deltaPos.toString();
+        if (deltaPos != null) {
+            return deltaPos.toString();
+        } else {
+            return "0,0,0";
+        }
     }
 
     public void onInit(Controller controller) {
         System.out.println("Initialized");
     }
 
+    /**
+     * Called when a leap is connected
+     * @param controller
+     */
     public void onConnect(Controller controller) {
         System.out.println("Connected");
         controller.enableGesture(Gesture.Type.TYPE_SWIPE);
@@ -32,26 +59,29 @@ public class LeapListener extends Listener {
         controller.enableGesture(Gesture.Type.TYPE_KEY_TAP);
     }
 
+    /**
+     * Called when the leap is disconnected
+     * @param controller
+     */
     public void onDisconnect(Controller controller) {
         System.out.println("Disconnected");
     }
+
 
     public void onExit(Controller controller) {
         System.out.println("Exited");
     }
 
+    /**
+     * Called when new data is available.
+     * @param controller
+     */
     public void onFrame(Controller controller) {
-        // Get the most recent frame and report some basic information
         Frame frame = controller.frame();
-        System.out.println("Frame id: " + frame.id()
-                + ", timestamp: " + frame.timestamp()
-                + ", hands: " + frame.hands().count()
-                + ", fingers: " + frame.fingers().count()
-                + ", tools: " + frame.tools().count()
-                + ", gestures " + frame.gestures().count());
 
         //Get hands
-        for (Hand hand : frame.hands()) {
+        Hand hand = frame.hand(0);
+        if (hand != null) {
             Vector posVector = hand.palmPosition();
             pos.x = posVector.getX();
             pos.y = posVector.getY();
@@ -61,8 +91,13 @@ public class LeapListener extends Listener {
                 deltaPos.y = pos.y - basePos.y;
                 deltaPos.z = pos.z - basePos.z;
             }
+            System.out.println(pos.toString());
         }
     }
+
+    /**
+     * A 3D vector
+     */
     private static class XYZ {
         public float x,y,z;
         public XYZ() {

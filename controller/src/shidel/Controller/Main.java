@@ -4,24 +4,21 @@ import java.awt.Dimension;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
+import javax.swing.*;
 
 import shidel.droneapp.UDPHandler;
-
 import com.leapmotion.leap.*;
-
-import javax.swing.*;
 
 public class Main extends JPanel {
     private static final int PREF_W = 400;
     private static final int PREF_H = PREF_W;
-    private static final String serverURL = "54.68.154.101";
     private static LeapListener listener;
 
     private UDPHandler controller;
 
     public Main() {
         try {
-            controller = new UDPHandler(serverURL, "c", null, null);
+            controller = new UDPHandler("c", null, null);
         } catch(IOException e) {
             e.printStackTrace();
             return;
@@ -31,22 +28,12 @@ public class Main extends JPanel {
         requestFocusInWindow();
 
         addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyTyped(KeyEvent e) {
-                //myKeyEvt(e, "keyTyped");
-            }
 
             @Override
-            public void keyReleased(KeyEvent e) {
-                //myKeyEvt(e, "keyReleased");
-            }
+            public void keyReleased(KeyEvent e) {}
 
             @Override
             public void keyPressed(KeyEvent e) {
-                myKeyEvt(e, "keyPressed");
-            }
-
-            private void myKeyEvt(KeyEvent e, String text) {
                 int key = e.getKeyCode();
 
                 switch (key) {
@@ -57,24 +44,37 @@ public class Main extends JPanel {
                         sendCmd("right");
                         break;
                     case KeyEvent.VK_UP:
-                        sendCmd("up");
+                        sendCmd("forward");
                         break;
                     case KeyEvent.VK_DOWN:
+                        sendCmd("backward");
+                        break;
+                    case KeyEvent.VK_SHIFT:
+                        sendCmd("up");
+                        break;
+                    case KeyEvent.VK_CONTROL:
                         sendCmd("down");
                         break;
                     case KeyEvent.VK_SPACE:
                         listener.setBasePos();
                         break;
+                    case KeyEvent.VK_ESCAPE:
+                        sendCmd("stop");
+                        System.exit(0);
+                        break;
                 }
             }
         });
-        Runnable mainLoop =  () -> { startLoop(); };
-        new Thread(mainLoop).start();
+        //Runnable mainLoop =  () -> { startLoop(); };
+        //new Thread(mainLoop).start();
     }
 
+    /**
+     * Uses a background thread to check leap for new data.
+     */
     public void startLoop() {
         while (true) {
-            sendCmd("leap||" + listener.getDeltaPos());
+            sendCmd("leap||" + listener.getPos());
             try {
                 Thread.sleep(50);
             } catch (InterruptedException e) {
@@ -83,6 +83,10 @@ public class Main extends JPanel {
         }
     }
 
+    /**
+     * Sends a message through the server to the UAV.
+     * @param cmd The command/message to be send
+     */
     public void sendCmd(String cmd){
         System.out.println(cmd);
         try {
@@ -99,7 +103,6 @@ public class Main extends JPanel {
 
     private static void createAndShowGui() {
         Main mainPanel = new Main();
-
         JFrame frame = new JFrame("ArrowTest");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().add(mainPanel);
@@ -112,10 +115,15 @@ public class Main extends JPanel {
         Controller controller = new Controller();
         listener = new LeapListener();
         controller.addListener(listener);
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                createAndShowGui();
+        SwingUtilities.invokeLater(() -> createAndShowGui());
+
+        // Prevent from exiting.
+        while (true) {
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-        });
+        }
     }
 }
