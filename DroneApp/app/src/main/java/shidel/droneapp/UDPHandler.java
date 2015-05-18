@@ -14,7 +14,7 @@ public class UDPHandler {
     private byte[] sendData = new byte[1024];
     private byte[] receiveData = new byte[1024];
     //private static final String serverURL = "ec2-52-10-29-169.us-west-2.compute.amazonaws.com";
-    private static final String serverURL = "52.11.71.30";
+    private String serverURL = "52.11.71.30";
     private InetAddress IPAddress;
     private Thread networkThread;
     private UDPCallback callback;
@@ -29,6 +29,17 @@ public class UDPHandler {
         this.callback = callback;
         this.threadAdapter = threadAdapter;
         connect();
+    }
+
+    public void useLocalhost() {
+        InetAddress IP= null;
+        try {
+            IP = InetAddress.getLocalHost();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+            return;
+        }
+        serverURL = IP.getHostAddress();
     }
 
     private boolean connect() throws IOException {
