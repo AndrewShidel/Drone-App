@@ -1,7 +1,5 @@
 package shidel.droneapp;
 
-
-
 import java.net.*;
 import java.lang.Thread;
 import java.lang.Runnable;
@@ -11,23 +9,22 @@ import java.util.Arrays;
 import shidel.droneapp.adapters.ThreadAdapter;
 
 public class UDPHandler {
-    private String serverURL = "";
     private String userType = "c";
     private DatagramSocket clientSocket;
-    public String latestMessage;
     private byte[] sendData = new byte[1024];
     private byte[] receiveData = new byte[1024];
-    InetAddress IPAddress;
-    Thread networkThread;
-    UDPCallback callback;
-    ThreadAdapter threadAdapter;
+    //private static final String serverURL = "ec2-52-10-29-169.us-west-2.compute.amazonaws.com";
+    private static final String serverURL = "52.11.71.30";
+    private InetAddress IPAddress;
+    private Thread networkThread;
+    private UDPCallback callback;
+    private ThreadAdapter threadAdapter;
 
     public static abstract class UDPCallback {
         public abstract void onCommand(String cmd);
     }
 
-    public UDPHandler(String serverURL, String userType, ThreadAdapter threadAdapter, UDPCallback callback) throws IOException {
-        this.serverURL = serverURL;
+    public UDPHandler(String userType, ThreadAdapter threadAdapter, UDPCallback callback) throws IOException {
         this.userType = userType;
         this.callback = callback;
         this.threadAdapter = threadAdapter;
@@ -70,7 +67,8 @@ public class UDPHandler {
                     try {
                         clientSocket.receive(receivePacket);
                     } catch (SocketTimeoutException e){
-                        connect();
+                        //connect();
+                        //Log.e("Error", "Socket Timeout");
                         continue;
                     } catch (IOException e) {
                         System.out.println("Could not receive the packet.");
@@ -91,7 +89,6 @@ public class UDPHandler {
         while (i >= 0 && bytes[i] == 0) {
             --i;
         }
-
         return Arrays.copyOf(bytes, i + 1);
     }
 
@@ -109,4 +106,3 @@ public class UDPHandler {
         clientSocket.send(sendPacket);
     }
 }
-

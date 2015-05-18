@@ -7,54 +7,45 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.widget.TextView;
-
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.SeekBar;
 import java.io.IOException;
 
 import shidel.droneapp.USBInterface.MaestroSSC;
 
-
 public class MainActivity extends Activity {
-    private MaestroSSC maestroSSC;
+    private static MaestroSSC maestroSSC = null;
+    private static Button armEscButton = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_main);
-        Log.d("Message", "test");
-        //Position p = new Position(this);
-        MainLoop loop = new MainLoop(MainActivity.this);
-
-        try {
-            loop.start(null);
-        } catch(IOException e) {
-            ((TextView)this.findViewById(R.id.debugX)).setText("Could not connect the server.");
-        }
-        maestroSSC = new MaestroSSC();
+        armEscButton = (Button) findViewById(R.id.armESCsButton);
+        SeekBar bar = (SeekBar) findViewById(R.id.seekBar);
+        maestroSSC = new MaestroSSC(this, bar);
     }
     @Override
     public void onResume() {
         super.onResume();
         Intent intent = getIntent();
-//		Log.d(TAG, "onResume(" + intent + ")");
         String action = intent.getAction();
 
         if (action.equals("android.hardware.usb.action.USB_DEVICE_ATTACHED")) {
-            UsbDevice device = (UsbDevice) intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+            UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
             if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action)) {
                 UsbManager usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
                 maestroSSC.setDevice(usbManager, device);
-
-                final Motors motors = new Motors(maestroSSC);
-                motors.armEscs(new Motors.MotorTaskCallback() {
+                armEscButton.setEnabled(true);
+                armEscButton.setText("START!");
+                armEscButton.setOnClickListener(new View.OnClickListener() {
                     @Override
-                    public void finished() {
-                        try {
-                            new MainLoop(MainActivity.this).start(motors);
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                    public void onClick(View v) {
+                        if (maestroSSC != null) {
+                            start();
                         }
                     }
                 });
@@ -64,5 +55,18 @@ public class MainActivity extends Activity {
                 Log.d("debug", "Unexpected Action=" + action.toString());
             }
         }
+    }
+    private void start() {
+        final Motors motors = new Motors(maestroSSC);
+        motors.armEscs(new Motors.MotorTaskCallback() {
+            @Override
+            public void finished() {
+            try {
+                new MainLoop(MainActivity.this).start(motors);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            }
+        });
     }
 }

@@ -2,153 +2,128 @@ package shidel.droneapp;
 
 import android.app.Activity;
 import android.widget.TextView;
-
 import java.io.IOException;
+import java.util.regex.Pattern;
 
 import shidel.droneapp.UDPHandler.UDPCallback;
 import shidel.droneapp.adapters.DroneThreadAdapter;
 import shidel.droneapp.adapters.ThreadAdapter;
 
-/**
- * Created by andrew on 1/1/15.
- */
 public class MainLoop {
-    private double desX, desY, desZ;
-    private double granularity = 10;
+    private int desPower = 1000;
+    private double desPitch, desRoll;
+    private double granularity = Math.PI/90;
     private Activity act;
-    private double z = 0;
+    private int accel = 300;
+    private boolean stop = false;
 
     public MainLoop(Activity act) {
         this.act = act;
-        desX = desY = desZ = 0;
+        desPitch = desRoll = 0;
     }
 
     public void start(final Motors motors) throws IOException {
-        final Position pos = new Position(act);
+        final Position position = new Position(Position.Type.ORIENTATION, act);
 
         final TextView dbX = (TextView) act.findViewById(R.id.debugX);
 
         ThreadAdapter adapter = new DroneThreadAdapter(act);
-        new UDPHandler("54.68.154.101", "d", adapter, new UDPCallback() {
+        new UDPHandler("d", adapter, new UDPCallback() {
             @Override
             public void onCommand(String cmd) {
-                dbX.setText(cmd);
-                String[] parts = cmd.split("||");
-                if (parts.length == 2 && parts[0].equals("leap")) {
-                    XYZ<Integer> xyz = parseXYZ(parts[1]);
-                    int m1, m2, m3, m4;
-                    m1 = m2 = m3 = m4 = mmToTagetV(xyz.y);
-
-                    int xDisp = mmToTagetV(xyz.x);
-                    m1 += xDisp;
-                    m4 += xDisp;
-                    m2 -= xDisp;
-                    m3 -= xDisp;
-
-                    int zDisp = mmToTagetV(xyz.z);
-                    m1 += zDisp;
-                    m2 += zDisp;
-                    m3 -= zDisp;
-                    m4 -= zDisp;
-
-                    motors.setSpeed(1, m1);
-                    motors.setSpeed(2, m2);
-                    motors.setSpeed(3, m3);
-                    motors.setSpeed(4, m4);
+                if (stop) {
                     return;
                 }
-                switch (cmd) {
-                    case "up":
-                        up();
-                        break;
-                    case "down":
-                        down();
-                        break;
-                    case "left":
-                        left();
-                        break;
-                    case "right":
-                        right();
-                        break;
-                    case "forward":
-                        forward();
-                        break;
-                    case "backward":
-                        backward();
-                        break;
+                if (cmd.contains("stop")) {
+                    motors.setSpeed(1, 0);
+                    motors.setSpeed(2, 0);
+                    motors.setSpeed(3, 0);
+                    motors.setSpeed(4, 0);
+                    stop = true;
+                    return;
                 }
+
+                double rollDiff, pitchDiff;
+                int m1, m2, m3, m4;
+                float[] rotationMatrix = position.getRotation(); // [azimuth, pitch, roll]
+
+                String[] parts = cmd.split(Pattern.quote("||"));
+                if (parts.length == 2 && parts[0].equals("leapd")) {
+                    String[] xyz = parts[1].split(",");
+                    Polar3D rot = new Polar3D(Double.parseDouble(xyz[0]),Double.parseDouble(xyz[1]),Double.parseDouble(xyz[2]));
+
+                    desPower = mmToTargetV((int) rot.radius);
+                    desRoll = rot.roll;
+                    desPitch = rot.pitch;
+                }else {
+                    switch (cmd) {
+                        case "up":
+                            up();
+                            break;
+                        case "down":
+                            down();
+                            break;
+                        case "left":
+                            left();
+                            break;
+                        case "right":
+                            right();
+                            break;
+                        case "forward":
+                            forward();
+                            break;
+                        case "backward":
+                            backward();
+                            break;
+                    }
+                }
+                m1 = m2 = m3 = m4 = desPower;
+                rollDiff = rotationMatrix[2] - desRoll;
+                pitchDiff = rotationMatrix[1] - desPitch;
+
+                m1 += rollDiff * accel;
+                m2 -= rollDiff * accel;
+                m3 -= rollDiff * accel;
+                m4 += rollDiff * accel;
+
+                m1 -= pitchDiff * accel;
+                m2 -= pitchDiff * accel;
+                m3 += pitchDiff * accel;
+                m4 += pitchDiff * accel;
+
+                motors.maestro.setTarget(0, m1);
+                motors.maestro.setTarget(1, m4);
+                motors.maestro.setTarget(2, m3);
+                motors.maestro.setTarget(3, m2);
             }
         });
-
-        while(true) {
-            motors.setSpeed(3, (int) (motors.getSpeed(3) - pos.getRx()));
-            motors.setSpeed(4, (int) (motors.getSpeed(4) - pos.getRx()));
-            motors.setSpeed(1, (int) (motors.getSpeed(1) + pos.getRx()));
-            motors.setSpeed(2, (int) (motors.getSpeed(2) + pos.getRx()));
-
-            motors.setSpeed(1, (int) (motors.getSpeed(1) - pos.getRy()));
-            motors.setSpeed(4, (int) (motors.getSpeed(4) - pos.getRy()));
-            motors.setSpeed(2, (int) (motors.getSpeed(2) + pos.getRy()));
-            motors.setSpeed(3, (int) (motors.getSpeed(3) + pos.getRy()));
-
-            double delta = (desZ - pos.getZ());
-            z = pos.getZ();
-            desZ -= z;
-            pos.zeroZ();
-            motors.setSpeed(1, (int) (motors.getSpeed(1) + delta));
-            motors.setSpeed(2, (int) (motors.getSpeed(2) + delta));
-            motors.setSpeed(3, (int) (motors.getSpeed(3) + delta));
-            motors.setSpeed(4, (int) (motors.getSpeed(4) + delta));
-
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     private void up() {
-        desZ = z + granularity;
+       desPower += 100;
     }
 
     private void down() {
-        desZ = z - granularity;
+       desPower -= 100;
     }
 
     private void left() {
-        desX -= granularity;
+        desRoll -= granularity;
     }
 
     private void right() {
-        desX += granularity;
+        desRoll += granularity;
     }
 
     private void forward() {
-        desY += granularity;
+        desPitch += granularity;
     }
 
     private void backward() {
-        desY -= granularity;
+        desPitch -= granularity;
     }
 
-    private XYZ<Integer> parseXYZ(String xyzStr) {
-        XYZ<Integer> xyz = new XYZ(Integer.class);
-        String[] parts = xyzStr.split(",");
-        xyz.x = (int) Double.parseDouble(parts[0]);
-        xyz.y = (int) Double.parseDouble(parts[1]);
-        xyz.z = (int) Double.parseDouble(parts[2]);
-        return xyz;
-    }
-
-    private class XYZ<T> {
-        public T x,y,z;
-        public XYZ(Class<T> clazz) {
-            x = y = z = clazz.cast(0);
-        }
-    }
-
-    private int mmToTagetV(int mm) {
-        return (mm/600)*3000;
+    private int mmToTargetV(int mm) {
+        return Math.min(3000, (mm-80)*4+1000); // Subtract 80 to bring min mm to 0. Multiply by 4 to bring range to [0-2000]. Add 1000 to bring range to [1000-3000].
     }
 }

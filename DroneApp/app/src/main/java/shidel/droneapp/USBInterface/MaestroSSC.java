@@ -1,5 +1,8 @@
 package shidel.droneapp.USBInterface;
 
+import android.app.Activity;
+import android.widget.SeekBar;
+
 /**
  * Main class for controlling servos. Currently implemented using Compact
  * Protocol.
@@ -13,6 +16,12 @@ package shidel.droneapp.USBInterface;
  *
  */
 public class MaestroSSC extends MaestroUSBDevice {
+    private Activity act;
+    private SeekBar seekBar;
+    public MaestroSSC(Activity act, SeekBar seekBar) {
+        this.act = act;
+        this.seekBar = seekBar;
+    }
 
     private static final String[][] errorMessages = {
             {
@@ -57,7 +66,16 @@ public class MaestroSSC extends MaestroUSBDevice {
     }
 
     public void setTarget(int channel, int target) {
-        // Pololu Protocol expects you to pass in how many QUARTER-seconds.
+
+        if (channel == 0) {
+            final int progress = target;
+            act.runOnUiThread(new Runnable() {
+                public void run() {
+                    seekBar.setProgress(progress);
+                }
+            });
+        }
+
         target = target * 4;
 
         sendCommand(CMD_SET_POSITION, channel, target);

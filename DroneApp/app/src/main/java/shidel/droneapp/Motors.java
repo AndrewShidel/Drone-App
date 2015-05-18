@@ -3,15 +3,13 @@ package shidel.droneapp;
 import android.os.AsyncTask;
 import shidel.droneapp.USBInterface.MaestroSSC;
 
-/**
- * Created by andrew on 1/3/15.
- */
+
 public class Motors {
     private int m1Speed, m2Speed, m3Speed, m4Speed;
-    private MaestroSSC maestro;
+    public MaestroSSC maestro;
     public Motors(MaestroSSC maestro){
         this.maestro = maestro;
-        m1Speed=m2Speed=m3Speed=m4Speed=0;
+        m1Speed=m2Speed=m3Speed=m4Speed=1000;
     }
 
     public void armEscs(MotorTaskCallback callback) {
@@ -25,38 +23,34 @@ public class Motors {
         motorID--;
         int startSpeed = 0;
         switch (motorID){
-            case 1:
+            case 0:
                 startSpeed = m1Speed;
                 m1Speed = speed;
                 break;
-            case 2:
+            case 1:
                 startSpeed = m1Speed;
                 m2Speed = speed;
                 break;
-            case 3:
+            case 2:
                 startSpeed = m1Speed;
                 m3Speed = speed;
                 break;
-            case 4:
+            case 3:
                 startSpeed = m1Speed;
                 m4Speed = speed;
                 break;
         }
         new SetTargetTask(callback).execute(motorID, startSpeed, speed);
     }
-    public int getSpeed(int motorID){
-        switch (motorID){
-            case 1:
-                return m1Speed;
-            case 2:
-                return m2Speed;
-            case 3:
-                return m3Speed;
-            case 4:
-                return m4Speed;
-            default:
-                return 0;
-        }
+    public void setDeltaSpeed(int s1, int s2, int s3, int s4) {
+        m1Speed += s1;
+        m2Speed += s4;
+        m3Speed += s3;
+        m4Speed += s2;
+        maestro.setTarget(0, m1Speed);
+        maestro.setTarget(1, m2Speed);
+        maestro.setTarget(2, m3Speed);
+        maestro.setTarget(3, m4Speed);
     }
 
     private class ArmEscTask extends AsyncTask<Void, Void, Void> {
@@ -86,6 +80,19 @@ public class Motors {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
+            }
+
+            for (int i=0; i<1000; i+=2) {
+                maestro.setTarget(0, i);
+                maestro.setTarget(1, i);
+                maestro.setTarget(2, i);
+                maestro.setTarget(3, i);
+
+                try {
+                    Thread.sleep(5);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
             return null;
         }
