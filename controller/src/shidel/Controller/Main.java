@@ -1,6 +1,8 @@
 package shidel.Controller;
 
-import java.awt.Dimension;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
@@ -16,12 +18,15 @@ public class Main extends JPanel {
 
     private UDPHandler controller;
 
-    public Main() {
+    private void connect(boolean useLocal) {
         try {
             controller = new UDPHandler("c", null, null);
         } catch(IOException e) {
             e.printStackTrace();
             return;
+        }
+        if (useLocal) {
+            controller.useLocalhost();
         }
 
         setFocusable(true);
@@ -104,23 +109,36 @@ public class Main extends JPanel {
         return new Dimension(PREF_W, PREF_H);
     }
 
-    private static void createAndShowGui() {
-        Main mainPanel = new Main();
+    private void createAndShowGui() {
         JFrame frame = new JFrame("ArrowTest");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.getContentPane().add(mainPanel);
+
+        final Checkbox useLocal = new Checkbox("Use Localhost", false);
+        this.add(useLocal);
+
+        JButton connectButton = new JButton("Connect");
+        connectButton.addActionListener(e -> {
+            connect(useLocal.getState());
+        });
+        this.add(connectButton);
+
+
+
+        frame.getContentPane().add(this);
         frame.pack();
         frame.setLocationByPlatform(true);
         frame.setVisible(true);
     }
 
-    public static void main(String[] args) {
-        Controller controller = new Controller();
-        listener = new LeapListener();
-        controller.addListener(listener);
-
+    public Main() {
         SwingUtilities.invokeLater(() -> createAndShowGui());
+    }
 
+    public static void main(String[] args) {
+        Controller leapController = new Controller();
+        listener = new LeapListener();
+        leapController.addListener(listener);
+        Main main = new Main();
         // Prevent from exiting.
         while (true) {
             try {
