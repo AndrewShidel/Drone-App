@@ -10,6 +10,7 @@
       <file url="file://$PROJECT_DIR$/../DroneApp/app/src/main/java/shidel/droneapp/Position.java" />
       <file url="file://$PROJECT_DIR$/../DroneApp/app/src/main/java/shidel/droneapp/Test.java" />
       <directory url="file://$PROJECT_DIR$/../DroneApp/app/src/androidTest" includeSubdirectories="true" />
+      <file url="file://$PROJECT_DIR$/../DroneApp/app/src/main/java/shidel/droneapp/adapters/DroneThreadAdapter.java" />
     </excludeFromCompile>
     <resourceExtensions />
     <wildcardResourcePatterns>
@@ -29,3 +30,4 @@
     </annotationProcessing>
   </component>
 </project>
+

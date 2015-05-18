@@ -1,6 +1,7 @@
 package shidel.Controller;
 
 import com.leapmotion.leap.*;
+import shidel.droneapp.Polar3D;
 
 public class LeapListener extends Listener {
     private XYZ pos = new XYZ();
@@ -77,11 +78,11 @@ public class LeapListener extends Listener {
      * @param controller
      */
     public void onFrame(Controller controller) {
+
         Frame frame = controller.frame();
 
         //Get hands
-        Hand hand = frame.hand(0);
-        if (hand != null) {
+        for (Hand hand : frame.hands()) {
             Vector posVector = hand.palmPosition();
             pos.x = posVector.getX();
             pos.y = posVector.getY();
@@ -91,7 +92,10 @@ public class LeapListener extends Listener {
                 deltaPos.y = pos.y - basePos.y;
                 deltaPos.z = pos.z - basePos.z;
             }
-            System.out.println(pos.toString());
+            //System.out.println("Pos: " + pos.toString());
+            Polar3D polar3D = new Polar3D(pos.x, pos.y, pos.z);
+            polar3D.toDegrees();
+            System.out.print("\r"+polar3D.toString());
         }
     }
 

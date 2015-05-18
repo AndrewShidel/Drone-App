@@ -1,8 +1,6 @@
 <component name="libraryTable">
   <library name="bin">
-    <CLASSES>
-      <root url="file:///usr/lib/jvm/java-7-openjdk-amd64/bin" />
-    </CLASSES>
+    <CLASSES />
     <JAVADOC />
     <SOURCES />
   </library>

@@ -65,8 +65,8 @@ public class Main extends JPanel {
                 }
             }
         });
-        //Runnable mainLoop =  () -> { startLoop(); };
-        //new Thread(mainLoop).start();
+        Runnable mainLoop =  () -> { startLoop(); };
+        new Thread(mainLoop).start();
     }
 
     /**
@@ -74,7 +74,10 @@ public class Main extends JPanel {
      */
     public void startLoop() {
         while (true) {
-            sendCmd("leap||" + listener.getPos());
+            String posStr = listener.getPos();
+            if (!posStr.contains("0.000")) {
+                sendCmd("leapd||" + posStr);
+            }
             try {
                 Thread.sleep(50);
             } catch (InterruptedException e) {
@@ -115,6 +118,7 @@ public class Main extends JPanel {
         Controller controller = new Controller();
         listener = new LeapListener();
         controller.addListener(listener);
+
         SwingUtilities.invokeLater(() -> createAndShowGui());
 
         // Prevent from exiting.
